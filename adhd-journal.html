@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あたまのなか日記</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="あたまのなか">
+<meta name="theme-color" content="#FF8C69">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --accent1: #FF8C69;
+    --accent2: #6EC6CA;
+    --accent3: #FFD166;
+    --accent4: #A8D8A8;
+    --text: #3D2B1F;
+    --text-soft: #9E8070;
+    --shadow: rgba(255,140,105,0.15);
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 100px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, #FFD16640 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .page { display: none; position: relative; z-index: 1; }
+  .page.active { display: block; }
+
+  /* Bottom Nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 2px solid #F0E8E0;
+    display: flex; z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0 12px; background: none; border: none; cursor: pointer;
+    font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-soft);
+    font-size: 10px; gap: 3px; transition: all .2s;
+  }
+  .nav-btn .nav-icon { font-size: 22px; }
+  .nav-btn.active { color: var(--accent1); }
+  .nav-btn.active .nav-icon { transform: scale(1.15); }
+
+  /* Shared */
+  .app { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 28px; border-radius: 50px; border: none;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn:active { transform: scale(.96); }
+  .btn-primary { background: var(--accent1); color: white; }
+  .btn-primary:hover { background: #ff7a55; }
+  .btn-nav-b { background: #F0F0F0; color: var(--text); }
+  .btn-nav-b:hover { background: #E5E5E5; }
+  .btn-ai { background: var(--accent4); color: #2a5a2a; width: 100%; padding: 14px; font-size: 15px; }
+  .btn-ai:hover { background: #95cc95; }
+  .btn-save { background: var(--accent2); color: white; width: 100%; padding: 14px; font-size: 15px; }
+  .btn-save:hover { background: #5ab5b9; }
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+
+  textarea {
+    width: 100%; border: 2px solid #EEE; border-radius: 14px; padding: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; line-height: 1.7;
+    resize: none; outline: none; transition: border .2s; color: var(--text); background: #FAFAFA;
+  }
+  textarea:focus { border-color: var(--accent2); background: white; }
+
+  /* JOURNAL PAGE */
+  #pageJournal header { text-align: center; padding: 36px 0 20px; }
+  #pageJournal header .emoji { font-size: 48px; display: block; margin-bottom: 8px; animation: float 3s ease-in-out infinite; }
+  #pageJournal header h1 { font-size: 26px; font-weight: 700; color: var(--accent1); letter-spacing: .05em; }
+  #pageJournal header .date { font-size: 13px; color: var(--text-soft); margin-top: 4px; }
+
+  .date-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+  .btn-change-date {
+    background: none; border: 1.5px solid #DDD; border-radius: 20px;
+    padding: 4px 12px; font-size: 12px; font-family: 'Zen Maru Gothic', sans-serif;
+    color: var(--text-soft); cursor: pointer; transition: all .2s;
+  }
+  .btn-change-date:hover { border-color: var(--accent1); color: var(--accent1); }
+  .date-picker-wrap {
+    margin-top: 10px; display: none; animation: slideIn .25s ease;
+  }
+  .date-picker-wrap.show { display: block; }
+  #datePicker {
+    border: 2px solid var(--accent2); border-radius: 12px; padding: 8px 14px;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; outline: none;
+    background: white; color: var(--text); width: 100%; max-width: 220px;
+  }
+
+  .steps { display: flex; gap: 6px; justify-content: center; margin: 16px 0 24px; }
+  .step-dot {
+    width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid #ddd;
+    background: white; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; cursor: pointer; transition: all .25s; font-weight: 700;
+  }
+  .step-dot.active { border-color: var(--accent1); background: var(--accent1); color: white; transform: scale(1.15); }
+  .step-dot.done { border-color: var(--accent4); background: var(--accent4); color: white; }
+
+  .progress-bar { height: 4px; background: #EEE; border-radius: 2px; margin: 0 0 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent1), var(--accent3)); border-radius: 2px; transition: width .4s ease; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 24px 20px;
+    margin-bottom: 16px; box-shadow: 0 4px 20px var(--shadow); display: none; animation: slideIn .35s ease;
+  }
+  .card.active { display: block; }
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .card-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .card-title { font-size: 16px; font-weight: 700; }
+  .card-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .s1 .card-icon { background: #FFE8E0; }
+  .s2 .card-icon { background: #E0F4F5; }
+  .s3 .card-icon { background: #FFF6DC; }
+  .s4 .card-icon { background: #E8F5E8; }
+
+  .praise-list { display: flex; flex-direction: column; gap: 10px; }
+  .praise-item { display: flex; align-items: center; gap: 10px; }
+  .praise-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .praise-input {
+    flex: 1; border: 2px solid #EEE; border-radius: 12px; padding: 10px 14px;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; outline: none;
+    transition: border .2s; background: #FAFAFA; color: var(--text);
+  }
+  .praise-input:focus { border-color: var(--accent3); background: white; }
+
+  .ai-box {
+    background: linear-gradient(135deg, #E8F5E8, #F0FBF0); border-radius: 14px; padding: 18px;
+    margin-top: 16px; border: 2px solid #A8D8A8; display: none; font-size: 14px; line-height: 1.8; white-space: pre-wrap;
+  }
+  .ai-box.show { display: block; animation: slideIn .35s ease; }
+  .ai-thinking { display: flex; align-items: center; gap: 8px; color: var(--text-soft); font-size: 13px; }
+  .dot-flashing { display: flex; gap: 4px; }
+  .dot-flashing span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent4); animation: blink 1.2s ease-in-out infinite; }
+  .dot-flashing span:nth-child(2) { animation-delay: .3s; }
+  .dot-flashing span:nth-child(3) { animation-delay: .6s; }
+  @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+  .summary-card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 20px var(--shadow); display: none; }
+  .summary-card.show { display: block; animation: slideIn .35s ease; }
+  .summary-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--accent1); }
+  .summary-section { margin-bottom: 14px; }
+  .summary-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-soft); margin-bottom: 6px; }
+  .summary-content { font-size: 13px; line-height: 1.7; background: #FAFAFA; border-radius: 10px; padding: 10px 14px; }
+  .praise-badge { display: inline-flex; align-items: center; gap: 6px; background: #FFF6DC; border-radius: 20px; padding: 4px 12px; font-size: 13px; margin: 3px; }
+  .char-count { text-align: right; font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+
+  .already-saved-banner {
+    background: #E8F5E8; border: 2px solid #A8D8A8; border-radius: 14px;
+    padding: 12px 16px; font-size: 13px; color: #2a5a2a; margin-bottom: 12px;
+    display: none; align-items: center; gap: 8px;
+  }
+  .already-saved-banner.show { display: flex; }
+
+  /* CALENDAR PAGE */
+  #pageCalendar .app { padding-top: 32px; }
+
+  .streak-banner {
+    background: linear-gradient(135deg, #FFE0D0, #FFF0E8); border-radius: 16px;
+    padding: 14px 20px; display: none; align-items: center; gap: 12px;
+    margin-bottom: 20px; border: 2px solid #FFD0B8;
+  }
+  .streak-banner.show { display: flex; }
+  .streak-fire { font-size: 32px; }
+  .streak-text { font-size: 13px; color: var(--text-soft); }
+  .streak-num { font-size: 22px; font-weight: 700; color: var(--accent1); }
+
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .cal-header h2 { font-size: 20px; font-weight: 700; color: var(--accent1); }
+  .cal-nav-btn {
+    width: 36px; height: 36px; border-radius: 50%; border: 2px solid #EEE;
+    background: white; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .cal-nav-btn:hover { border-color: var(--accent1); color: var(--accent1); }
+
+  .cal-grid { background: white; border-radius: var(--radius); box-shadow: 0 4px 20px var(--shadow); overflow: hidden; margin-bottom: 16px; }
+  .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: #FFF3EC; border-bottom: 2px solid #F0E8E0; }
+  .cal-weekday { text-align: center; padding: 10px 0; font-size: 11px; font-weight: 700; color: var(--text-soft); }
+  .cal-weekday:first-child { color: #E05050; }
+  .cal-weekday:last-child { color: #5080E0; }
+  .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+
+  .cal-day {
+    min-height: 52px; padding: 6px 4px; border-bottom: 1px solid #F5F0EC; border-right: 1px solid #F5F0EC;
+    transition: background .15s; position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .cal-day.clickable { cursor: pointer; }
+  .cal-day.clickable:hover { background: #FFF8F4; }
+  .cal-day.other-month .cal-num { color: #CCC; }
+  .cal-day.today .cal-num {
+    background: var(--accent1); color: white; width: 26px; height: 26px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .cal-day.has-entry { background: #FFF6F0; }
+  .cal-day.sunday .cal-num { color: #E05050; }
+  .cal-day.saturday .cal-num { color: #5080E0; }
+  .cal-day.today.sunday .cal-num,
+  .cal-day.today.saturday .cal-num { color: white; }
+  .cal-num { font-size: 13px; font-weight: 500; line-height: 1; }
+  .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent1); }
+
+  .cal-legend { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 4px; padding-bottom: 8px; }
+
+  .backup-box {
+    background: white; border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 4px 20px var(--shadow); margin-top: 8px;
+  }
+  .backup-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .backup-desc { font-size: 12px; color: var(--text-soft); margin-bottom: 14px; line-height: 1.6; }
+  .backup-btns { display: flex; gap: 10px; }
+  .btn-export { background: #FFF6DC; color: #7a5800; flex: 1; padding: 12px; }
+  .btn-export:hover { background: #ffe89a; }
+  .btn-import { background: #E0F4F5; color: #1a5c60; flex: 1; padding: 12px; cursor: pointer; }
+  .btn-import:hover { background: #b8e8ea; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4);
+    z-index: 300; display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal {
+    background: white; border-radius: 24px 24px 0 0; width: 100%; max-width: 520px;
+    max-height: 82vh; overflow-y: auto; padding: 24px 20px 44px;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width: 40px; height: 4px; background: #DDD; border-radius: 2px; margin: 0 auto 20px; }
+  .modal-date { font-size: 15px; font-weight: 700; color: var(--accent1); margin-bottom: 16px; }
+  .modal-section { margin-bottom: 16px; }
+  .modal-label { font-size: 11px; font-weight: 700; color: var(--text-soft); letter-spacing: .08em; margin-bottom: 8px; }
+  .modal-text { font-size: 14px; line-height: 1.75; background: #FAFAFA; border-radius: 12px; padding: 12px 14px; white-space: pre-wrap; }
+  .modal-praises { display: flex; flex-wrap: wrap; gap: 6px; }
+  .modal-close {
+    width: 100%; padding: 12px; border: none; background: #F0F0F0; border-radius: 50px;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; transition: background .2s;
+  }
+  .modal-close:hover { background: #E5E5E5; }
+  .modal-edit {
+    width: 100%; padding: 12px; border: none; background: #FFF3EC; border-radius: 50px;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; color: var(--accent1); transition: background .2s;
+  }
+  .modal-edit:hover { background: #FFE8DC; }
+  .modal-delete {
+    width: 100%; padding: 12px; border: none; background: #FFF0F0; border-radius: 50px;
+    font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; color: #E05050; transition: background .2s;
+  }
+  .modal-delete:hover { background: #FFE0E0; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #3D2B1F; color: white; padding: 12px 24px; border-radius: 50px;
+    font-size: 14px; font-weight: 700; opacity: 0; transition: all .3s; z-index: 400; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- PAGE: JOURNAL -->
+<div id="pageJournal" class="page active">
+  <div class="app">
+    <header>
+      <span class="emoji">🧠</span>
+      <h1>あたまのなか日記</h1>
+      <div class="date-row">
+        <div class="date" id="dateStr"></div>
+        <button class="btn-change-date" onclick="toggleDatePicker()">📅 日付を変える</button>
+      </div>
+      <div class="date-picker-wrap" id="datePickerWrap">
+        <input type="date" id="datePicker" onchange="changeDate(this.value)">
+      </div>
+    </header>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
+    <div class="steps">
+      <div class="step-dot active" id="dot1" onclick="goStep(1)">1</div>
+      <div class="step-dot" id="dot2" onclick="goStep(2)">2</div>
+      <div class="step-dot" id="dot3" onclick="goStep(3)">3</div>
+      <div class="step-dot" id="dot4" onclick="goStep(4)">4</div>
+    </div>
+
+    <div class="card s1 active" id="card1">
+      <div class="card-header">
+        <div class="card-icon">🌀</div>
+        <div><div class="card-title">あたまを空っぽにする</div><div class="card-sub">思ったこと、気になること、なんでもOK</div></div>
+      </div>
+      <textarea id="brain" rows="7" placeholder="今あたまの中にあること、ぜんぶここに出しちゃおう。&#10;&#10;気になってること、やらなきゃいけないこと、モヤモヤ、なんでも。書いたら少し楽になるよ ✨"></textarea>
+      <div class="char-count"><span id="brainCount">0</span> 文字</div>
+      <div class="btn-row"><span></span><button class="btn btn-primary" onclick="goStep(2)">つぎへ →</button></div>
+    </div>
+
+    <div class="card s2" id="card2">
+      <div class="card-header">
+        <div class="card-icon">⭐</div>
+        <div><div class="card-title">今日の自分をほめる</div><div class="card-sub">どんな小さなことでも3つ！</div></div>
+      </div>
+      <div class="praise-list">
+        <div class="praise-item"><div class="praise-num">1</div><input class="praise-input" id="p1" type="text" placeholder="例：朝ごはん食べた"></div>
+        <div class="praise-item"><div class="praise-num">2</div><input class="praise-input" id="p2" type="text" placeholder="例：返信を1件した"></div>
+        <div class="praise-item"><div class="praise-num">3</div><input class="praise-input" id="p3" type="text" placeholder="例：今日日記を開いた"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-nav-b" onclick="goStep(1)">← もどる</button><button class="btn btn-primary" onclick="goStep(3)">つぎへ →</button></div>
+    </div>
+
+    <div class="card s3" id="card3">
+      <div class="card-header">
+        <div class="card-icon">🌱</div>
+        <div><div class="card-title">今日をもう少し良くするには？</div><div class="card-sub">小さくていい、1つだけ</div></div>
+      </div>
+      <textarea id="improve" rows="4" placeholder="例：水を1杯飲む、5分だけ片付けをする、深呼吸を3回する…&#10;&#10;ちいさくていいよ 🌿"></textarea>
+      <div class="char-count"><span id="improveCount">0</span> 文字</div>
+      <div class="btn-row"><button class="btn btn-nav-b" onclick="goStep(2)">← もどる</button><button class="btn btn-primary" onclick="goStep(4)">つぎへ →</button></div>
+    </div>
+
+    <div class="card s4" id="card4">
+      <div class="card-header">
+        <div class="card-icon">🤖</div>
+        <div><div class="card-title">AIに総括してもらう</div><div class="card-sub">今日の日記をAIがやさしく読んでくれるよ</div></div>
+      </div>
+      <button class="btn btn-ai" onclick="askAI()">✨ AIに総括してもらう</button>
+      <div class="ai-box" id="aiBox"></div>
+      <div class="btn-row"><button class="btn btn-nav-b" onclick="goStep(3)">← もどる</button><button class="btn btn-primary" onclick="showSummary()">📋 まとめを見る</button></div>
+    </div>
+
+    <div class="summary-card" id="summaryCard">
+      <div class="summary-title">📖 今日の日記まとめ</div>
+      <div class="already-saved-banner" id="alreadySavedBanner">
+        <span>✅</span><span>今日の日記はもう保存されています。上書き保存できます。</span>
+      </div>
+      <div id="summaryContent"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+        <button class="btn btn-save" onclick="saveEntry()">💾 保存する</button>
+        <button class="btn btn-primary" style="width:100%" onclick="resetAll()">🌅 新しい日記を書く</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: CALENDAR -->
+<div id="pageCalendar" class="page">
+  <div class="app">
+    <div class="streak-banner" id="streakBanner">
+      <div class="streak-fire">🔥</div>
+      <div>
+        <div class="streak-num" id="streakNum">0日</div>
+        <div class="streak-text">連続記録中！すごい✨</div>
+      </div>
+    </div>
+
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <h2 id="calTitle"></h2>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+
+    <div class="cal-grid">
+      <div class="cal-weekdays">
+        <div class="cal-weekday">日</div><div class="cal-weekday">月</div>
+        <div class="cal-weekday">火</div><div class="cal-weekday">水</div>
+        <div class="cal-weekday">木</div><div class="cal-weekday">金</div>
+        <div class="cal-weekday">土</div>
+      </div>
+      <div class="cal-days" id="calDays"></div>
+    </div>
+    <div class="cal-legend">🟠 記録のある日をタップすると日記を読めるよ</div>
+
+    <!-- バックアップ -->
+    <div class="backup-box">
+      <div class="backup-title">📦 データのバックアップ</div>
+      <div class="backup-desc">機種変更や誤削除に備えて、定期的に保存しておこう</div>
+      <div class="backup-btns">
+        <button class="btn btn-export" onclick="exportData()">⬇️ エクスポート</button>
+        <label class="btn btn-import" for="importFile">⬆️ インポート</label>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-handle"></div>
+    <div class="modal-date" id="modalDate"></div>
+    <div id="modalContent"></div>
+    <button class="modal-close" onclick="closeModalDirect()">閉じる</button>
+    <button class="modal-edit" onclick="editFromModal()">✏️ この日の日記を編集する</button>
+    <button class="modal-delete" onclick="deleteEntry()">🗑️ この日の記録を削除</button>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="navJournal" onclick="showPage('journal')">
+    <span class="nav-icon">✏️</span><span>日記を書く</span>
+  </button>
+  <button class="nav-btn" id="navCalendar" onclick="showPage('calendar')">
+    <span class="nav-icon">📅</span><span>カレンダー</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Storage ──
+const STORAGE_KEY = 'adhd-journal-v1';
+function loadEntries() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); } catch{return{};} }
+function saveEntries(e) { localStorage.setItem(STORAGE_KEY, JSON.stringify(e)); }
+function dateKey(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+function getTodayKey() { return dateKey(selectedDate); }
+
+// ── Page nav ──
+function showPage(name) {
+  document.getElementById('pageJournal').classList.toggle('active', name==='journal');
+  document.getElementById('pageCalendar').classList.toggle('active', name==='calendar');
+  document.getElementById('navJournal').classList.toggle('active', name==='journal');
+  document.getElementById('navCalendar').classList.toggle('active', name==='calendar');
+  if (name==='calendar') renderCalendar();
+  window.scrollTo({top:0});
+}
+
+// ── Journal ──
+let currentStep = 1;
+let selectedDate = new Date(); // 選択中の日付
+
+function formatDateLabel(date) {
+  return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日（${'日月火水木金土'[date.getDay()]}）`;
+}
+function toInputValue(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+// 初期表示
+document.getElementById('dateStr').textContent = formatDateLabel(selectedDate);
+document.getElementById('datePicker').value = toInputValue(selectedDate);
+loadEntryForDate(dateKey(selectedDate));
+
+function toggleDatePicker() {
+  document.getElementById('datePickerWrap').classList.toggle('show');
+}
+
+function changeDate(val) {
+  if (!val) return;
+  const [y, m, d] = val.split('-').map(Number);
+  selectedDate = new Date(y, m-1, d);
+  document.getElementById('dateStr').textContent = formatDateLabel(selectedDate);
+  document.getElementById('datePickerWrap').classList.remove('show');
+  loadEntryForDate(val);
+  showToast(`📅 ${y}年${m}月${d}日の日記に切り替えました`);
+}
+
+function loadEntryForDate(key) {
+  const entries = loadEntries();
+  const entry = entries[key];
+  // フォームをリセット
+  ['brain','improve'].forEach(id => { document.getElementById(id).value = ''; });
+  ['p1','p2','p3'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('aiBox').className = 'ai-box';
+  document.getElementById('aiBox').innerHTML = '';
+  document.getElementById('brainCount').textContent = '0';
+  document.getElementById('improveCount').textContent = '0';
+  document.getElementById('summaryCard').classList.remove('show');
+  ['dot1','dot2','dot3','dot4'].forEach(id => { document.getElementById(id).className = 'step-dot'; });
+  currentStep = 1;
+  document.getElementById('card1').classList.add('active');
+  document.getElementById('dot1').classList.add('active');
+  document.getElementById('progressFill').style.width = '25%';
+
+  // 既存データがあれば読み込む
+  if (entry) {
+    document.getElementById('brain').value = entry.brain || '';
+    document.getElementById('p1').value = entry.praises?.[0] || '';
+    document.getElementById('p2').value = entry.praises?.[1] || '';
+    document.getElementById('p3').value = entry.praises?.[2] || '';
+    document.getElementById('improve').value = entry.improve || '';
+    document.getElementById('brainCount').textContent = (entry.brain||'').length;
+    document.getElementById('improveCount').textContent = (entry.improve||'').length;
+    if (entry.ai) {
+      document.getElementById('aiBox').className = 'ai-box show';
+      document.getElementById('aiBox').textContent = entry.ai;
+    }
+  }
+}
+
+document.getElementById('brain').addEventListener('input', function(){ document.getElementById('brainCount').textContent=this.value.length; });
+document.getElementById('improve').addEventListener('input', function(){ document.getElementById('improveCount').textContent=this.value.length; });
+
+function goStep(n) {
+  document.getElementById(`card${currentStep}`).classList.remove('active');
+  document.getElementById(`dot${currentStep}`).classList.remove('active');
+  if (currentStep < n) document.getElementById(`dot${currentStep}`).classList.add('done');
+  currentStep = n;
+  document.getElementById(`card${n}`).classList.add('active');
+  document.getElementById(`dot${n}`).classList.add('active');
+  document.getElementById(`dot${n}`).classList.remove('done');
+  document.getElementById('progressFill').style.width = [25,50,75,100][n-1]+'%';
+  document.getElementById('summaryCard').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function askAI() {
+  const brain   = document.getElementById('brain').value   || '（記入なし）';
+  const p1      = document.getElementById('p1').value      || '（記入なし）';
+  const p2      = document.getElementById('p2').value      || '（記入なし）';
+  const p3      = document.getElementById('p3').value      || '（記入なし）';
+  const improve = document.getElementById('improve').value || '（記入なし）';
+  const box = document.getElementById('aiBox');
+  box.className='ai-box show';
+  box.innerHTML='<div class="ai-thinking"><span>考えてるよ</span><div class="dot-flashing"><span></span><span></span><span></span></div></div>';
+  const prompt=`あなたはADHDを持つ人の毎日の日記を読む、やさしくて温かいカウンセラーAIです。
+以下の日記を読んで、200〜300文字程度で総括してください。
+ルール：
+- ポジティブな視点で、批判や否定はしない
+- 自己ほめの3つをしっかり認めて肯定する
+- 「今日をより良くするために」書いたことを応援する
+- 頑張りをねぎらう温かい言葉で締める
+- 絵文字を2〜3個使ってOK
+
+【あたまの中にあること】
+${brain}
+
+【今日の自分へのほめ言葉】
+1. ${p1}
+2. ${p2}
+3. ${p3}
+
+【今日をより良くするために】
+${improve}`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    box.textContent = data.content?.map(c=>c.text||'').join('') || 'うまく読み込めなかったみたい…もう一度試してみてね。';
+  } catch(e) { box.textContent='通信エラーが発生しました。もう一度試してみてね。'; }
+}
+
+function showSummary() {
+  const sc = document.getElementById('summaryCard');
+  sc.classList.add('show');
+  const todayAlreadySaved = !!loadEntries()[getTodayKey()];
+  document.getElementById('alreadySavedBanner').classList.toggle('show', todayAlreadySaved);
+
+  const brain=document.getElementById('brain').value, p1=document.getElementById('p1').value,
+        p2=document.getElementById('p2').value, p3=document.getElementById('p3').value,
+        improve=document.getElementById('improve').value,
+        aiText=document.getElementById('aiBox').textContent;
+  let html='';
+  if(brain) html+=`<div class="summary-section"><div class="summary-label">🌀 あたまの中にあったこと</div><div class="summary-content">${esc(brain)}</div></div>`;
+  const praises=[p1,p2,p3].filter(Boolean);
+  if(praises.length) html+=`<div class="summary-section"><div class="summary-label">⭐ 今日の自分へのほめ言葉</div><div>${praises.map(p=>`<span class="praise-badge">✨ ${esc(p)}</span>`).join('')}</div></div>`;
+  if(improve) html+=`<div class="summary-section"><div class="summary-label">🌱 今日をより良くするために</div><div class="summary-content">${esc(improve)}</div></div>`;
+  if(aiText&&!aiText.includes('考えてるよ')) html+=`<div class="summary-section"><div class="summary-label">🤖 AIからのメッセージ</div><div class="summary-content">${esc(aiText)}</div></div>`;
+  document.getElementById('summaryContent').innerHTML=html;
+  sc.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function saveEntry() {
+  const key = getTodayKey();
+  const entries = loadEntries();
+  const aiText = document.getElementById('aiBox').textContent;
+  entries[key] = {
+    brain:   document.getElementById('brain').value,
+    praises: [document.getElementById('p1').value, document.getElementById('p2').value, document.getElementById('p3').value].filter(Boolean),
+    improve: document.getElementById('improve').value,
+    ai:      (aiText && !aiText.includes('考えてるよ')) ? aiText : '',
+    savedAt: new Date().toISOString()
+  };
+  saveEntries(entries);
+  document.getElementById('alreadySavedBanner').classList.add('show');
+  showToast('💾 保存しました！');
+}
+
+function resetAll() {
+  loadEntryForDate(dateKey(selectedDate));
+}
+
+// ── Calendar ──
+let calYear=now.getFullYear(), calMonth=now.getMonth();
+
+function renderCalendar() {
+  const entries = loadEntries();
+  const todayKey = getTodayKey();
+  document.getElementById('calTitle').textContent = `${calYear}年${calMonth+1}月`;
+
+  const streak = calcStreak(entries);
+  const banner = document.getElementById('streakBanner');
+  if (streak >= 2) { banner.classList.add('show'); document.getElementById('streakNum').textContent=`${streak}日`; }
+  else { banner.classList.remove('show'); }
+
+  const first = new Date(calYear, calMonth, 1);
+  const last  = new Date(calYear, calMonth+1, 0);
+  const grid  = document.getElementById('calDays');
+  grid.innerHTML='';
+
+  // prev month padding
+  for(let i=0;i<first.getDay();i++) {
+    const d=new Date(calYear,calMonth,-(first.getDay()-i-1));
+    grid.appendChild(makeDayCell(d,entries,todayKey,true));
+  }
+  // current month
+  for(let d=1;d<=last.getDate();d++) grid.appendChild(makeDayCell(new Date(calYear,calMonth,d),entries,todayKey,false));
+  // next month padding
+  const total=first.getDay()+last.getDate();
+  const rem=(7-(total%7))%7;
+  for(let d=1;d<=rem;d++) grid.appendChild(makeDayCell(new Date(calYear,calMonth+1,d),entries,todayKey,true));
+}
+
+function makeDayCell(date,entries,todayKey,otherMonth) {
+  const key=dateKey(date), hasEntry=!!entries[key], isToday=key===todayKey, dow=date.getDay();
+  const cell=document.createElement('div');
+  let cls='cal-day';
+  if(otherMonth) cls+=' other-month';
+  if(isToday) cls+=' today';
+  if(hasEntry) cls+=' has-entry clickable';
+  if(dow===0) cls+=' sunday'; else if(dow===6) cls+=' saturday';
+  cell.className=cls;
+  const num=document.createElement('div'); num.className='cal-num'; num.textContent=date.getDate(); cell.appendChild(num);
+  if(hasEntry) {
+    const dot=document.createElement('div'); dot.className='cal-dot'; cell.appendChild(dot);
+    cell.onclick=()=>openModal(key,entries[key]);
+  }
+  return cell;
+}
+
+function calcStreak(entries) {
+  let streak=0, d=new Date();
+  while(true) { if(entries[dateKey(d)]){ streak++; d.setDate(d.getDate()-1); } else break; }
+  return streak;
+}
+
+function changeMonth(delta) {
+  calMonth+=delta;
+  if(calMonth>11){calMonth=0;calYear++;} else if(calMonth<0){calMonth=11;calYear--;}
+  renderCalendar();
+}
+
+// ── Modal ──
+let openModalKey=null;
+function openModal(key,entry) {
+  openModalKey=key;
+  const [y,m,d]=key.split('-');
+  const dObj=new Date(+y,+m-1,+d);
+  document.getElementById('modalDate').textContent=`${y}年${+m}月${+d}日（${'日月火水木金土'[dObj.getDay()]}）`;
+  let html='';
+  if(entry.brain) html+=`<div class="modal-section"><div class="modal-label">🌀 あたまの中にあったこと</div><div class="modal-text">${esc(entry.brain)}</div></div>`;
+  if(entry.praises?.length) html+=`<div class="modal-section"><div class="modal-label">⭐ 自分へのほめ言葉</div><div class="modal-praises">${entry.praises.map(p=>`<span class="praise-badge">✨ ${esc(p)}</span>`).join('')}</div></div>`;
+  if(entry.improve) html+=`<div class="modal-section"><div class="modal-label">🌱 今日をより良くするために</div><div class="modal-text">${esc(entry.improve)}</div></div>`;
+  if(entry.ai) html+=`<div class="modal-section"><div class="modal-label">🤖 AIからのメッセージ</div><div class="modal-text">${esc(entry.ai)}</div></div>`;
+  document.getElementById('modalContent').innerHTML=html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function editFromModal() {
+  if (!openModalKey) return;
+  const [y, m, d] = openModalKey.split('-').map(Number);
+  selectedDate = new Date(y, m-1, d);
+  document.getElementById('dateStr').textContent = formatDateLabel(selectedDate);
+  document.getElementById('datePicker').value = openModalKey;
+  closeModalDirect();
+  loadEntryForDate(openModalKey);
+  showPage('journal');
+  showToast(`📅 ${y}年${m}月${d}日の日記を編集中`);
+}
+
+function closeModalOutside(e){ if(e.target===document.getElementById('modalOverlay')) closeModalDirect(); }
+function closeModalDirect(){ document.getElementById('modalOverlay').classList.remove('show'); openModalKey=null; }
+function deleteEntry() {
+  if(!openModalKey) return;
+  if(!confirm('この日の記録を削除しますか？')) return;
+  const entries=loadEntries(); delete entries[openModalKey]; saveEntries(entries);
+  closeModalDirect(); renderCalendar(); showToast('🗑️ 削除しました');
+}
+
+// ── Utils ──
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+// ── Export / Import ──
+function exportData() {
+  const entries = loadEntries();
+  const count = Object.keys(entries).length;
+  if (count === 0) { showToast('📭 保存されている日記がありません'); return; }
+  const json = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), entries }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `atama-journal-${date}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`✅ ${count}件の日記をエクスポートしました`);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.entries || typeof data.entries !== 'object') throw new Error('invalid');
+      const existing = loadEntries();
+      const imported = data.entries;
+      const newKeys   = Object.keys(imported).filter(k => !existing[k]);
+      const overKeys  = Object.keys(imported).filter(k =>  existing[k]);
+      if (overKeys.length > 0) {
+        const ok = confirm(`${newKeys.length}件の新しい記録と、${overKeys.length}件の既存の記録が見つかりました。\n既存の記録を上書きしますか？`);
+        if (!ok) {
+          // 新しい分だけ追加
+          newKeys.forEach(k => { existing[k] = imported[k]; });
+          saveEntries(existing);
+          showToast(`✅ ${newKeys.length}件の新しい記録を追加しました`);
+        } else {
+          saveEntries({ ...existing, ...imported });
+          showToast(`✅ ${Object.keys(imported).length}件の記録をインポートしました`);
+        }
+      } else {
+        saveEntries({ ...existing, ...imported });
+        showToast(`✅ ${newKeys.length}件の記録をインポートしました`);
+      }
+      renderCalendar();
+    } catch {
+      showToast('❌ ファイルが読み込めませんでした');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+<script>
+  // PWA: Service Worker 登録
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(e => console.log('SW error:', e));
+    });
+  }
+</script>
+</body>
+</html>

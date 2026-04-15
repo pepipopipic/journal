@@ -1,0 +1,24 @@
+{
+  "name": "あたまのなか日記",
+  "short_name": "あたまのなか",
+  "description": "ADHDのための毎日日記アプリ",
+  "start_url": "./adhd-journal.html",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#FF8C69",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
