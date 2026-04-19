@@ -2,424 +2,489 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>あたまのなか日記 デモ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あたまのなか日記</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="あたまのなか">
+<meta name="theme-color" content="#FF8C69">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#FFF8F0; --card:#FFFFFF; --accent1:#FF8C69; --accent2:#6EC6CA;
   --accent3:#FFD166; --accent4:#A8D8A8; --text:#3D2B1F; --text-soft:#9E8070;
-  --shadow:rgba(255,140,105,0.18); --radius:20px;
+  --shadow:rgba(255,140,105,0.15); --radius:20px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{font-family:'Zen Maru Gothic',sans-serif;background:#E8DDD4;display:flex;align-items:center;justify-content:center;}
-
-/* Phone shell */
-.phone{
-  width:375px; height:720px;
-  background:var(--bg);
-  border-radius:44px;
-  box-shadow:0 32px 80px rgba(0,0,0,0.35), 0 0 0 10px #1a1a1a, 0 0 0 12px #333;
-  overflow:hidden;
-  position:relative;
-  display:flex; flex-direction:column;
+body{
+  font-family:'Zen Maru Gothic',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:0 0 80px;
 }
-.phone-notch{
-  position:absolute; top:0; left:50%; transform:translateX(-50%);
-  width:120px; height:28px; background:#1a1a1a; border-radius:0 0 18px 18px; z-index:200;
-}
-.phone-screen{
-  flex:1; overflow:hidden; position:relative;
-  margin-top:0;
-}
-
 body::before{
   content:'';position:fixed;inset:0;
-  background-image:radial-gradient(circle,#FFD16630 1px,transparent 1px);
-  background-size:28px 28px; pointer-events:none;
+  background-image:radial-gradient(circle,#FFD16640 1px,transparent 1px);
+  background-size:28px 28px;pointer-events:none;z-index:0;
 }
 
-/* Pages */
-.page{display:none;position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:28px 16px 90px;z-index:1;}
-.page.active{display:block;animation:pageIn .3s ease;}
-@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+/* ── Layout ── */
+.page{display:none;position:relative;z-index:1;}
+.page.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-/* Bottom Nav */
+.wrap{max-width:560px;margin:0 auto;padding:0 20px;}
+
+/* ── Bottom Nav ── */
 .bottom-nav{
-  position:absolute;bottom:0;left:0;right:0;height:70px;
+  position:fixed;bottom:0;left:0;right:0;
   background:white;border-top:2px solid #F0E8E0;
   display:flex;z-index:100;
-  box-shadow:0 -4px 16px rgba(0,0,0,0.06);
+  box-shadow:0 -4px 20px rgba(0,0,0,0.06);
 }
 .nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:none;border:none;cursor:pointer;
-  font-family:'Zen Maru Gothic',sans-serif;color:var(--text-soft);font-size:10px;gap:3px;
-  transition:all .2s;padding-bottom:4px;
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:10px 0 13px;background:none;border:none;cursor:pointer;
+  font-family:'Zen Maru Gothic',sans-serif;color:var(--text-soft);
+  font-size:11px;gap:3px;transition:all .2s;
 }
 .nav-btn .ni{font-size:22px;transition:transform .2s;}
 .nav-btn.active{color:var(--accent1);}
-.nav-btn.active .ni{transform:scale(1.2);}
+.nav-btn.active .ni{transform:scale(1.18);}
 
-/* Shared */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 24px;border-radius:50px;border:none;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+/* ── Shared components ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 26px;border-radius:50px;border:none;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+}
 .btn:active{transform:scale(.96);}
 .btn-primary{background:var(--accent1);color:white;}
+.btn-primary:hover{background:#ff7a55;}
 .btn-ghost{background:#F0F0F0;color:var(--text);}
-.btn-save{background:var(--accent2);color:white;width:100%;padding:13px;}
-.btn-copy{background:#F0F0F0;color:var(--text);width:100%;padding:13px;}
-.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px;}
+.btn-ghost:hover{background:#E5E5E5;}
+.btn-save{background:var(--accent2);color:white;width:100%;padding:14px;font-size:15px;}
+.btn-save:hover{background:#5ab5b9;}
+.btn-copy{background:#F0F0F0;color:var(--text);width:100%;padding:14px;font-size:15px;}
+.btn-copy:hover{background:#E5E5E5;}
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:18px;}
 .w100{width:100%;}
 
-textarea,input[type=text]{font-family:'Zen Maru Gothic',sans-serif;color:var(--text);}
-textarea{width:100%;border:2px solid #EEE;border-radius:13px;padding:12px;font-size:13px;line-height:1.65;resize:none;outline:none;transition:border .2s;background:#FAFAFA;}
+textarea{
+  width:100%;border:2px solid #EEE;border-radius:14px;padding:14px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:14px;line-height:1.7;
+  resize:none;outline:none;transition:border .2s;color:var(--text);background:#FAFAFA;
+}
 textarea:focus{border-color:var(--accent2);background:white;}
 
-/* ── JOURNAL ── */
-#pageJournal header{text-align:center;padding:20px 0 14px;}
-#pageJournal header .emoji{font-size:42px;display:block;margin-bottom:5px;animation:float 3s ease-in-out infinite;}
-#pageJournal header h1{font-size:22px;font-weight:700;color:var(--accent1);}
-.date-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:3px;flex-wrap:wrap;}
-.date{font-size:12px;color:var(--text-soft);}
-.btn-chdate{background:none;border:1.5px solid #DDD;border-radius:20px;padding:3px 10px;font-size:11px;font-family:'Zen Maru Gothic',sans-serif;color:var(--text-soft);cursor:pointer;}
+/* ── JOURNAL PAGE ── */
+#pageJournal header{text-align:center;padding:36px 0 20px;}
+#pageJournal header .emoji{font-size:48px;display:block;margin-bottom:8px;animation:float 3s ease-in-out infinite;}
+#pageJournal header h1{font-size:26px;font-weight:700;color:var(--accent1);letter-spacing:.04em;}
+.date-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:5px;flex-wrap:wrap;}
+.date{font-size:13px;color:var(--text-soft);}
+.btn-chdate{
+  background:none;border:1.5px solid #DDD;border-radius:20px;
+  padding:4px 12px;font-size:12px;font-family:'Zen Maru Gothic',sans-serif;
+  color:var(--text-soft);cursor:pointer;transition:all .2s;
+}
+.btn-chdate:hover{border-color:var(--accent1);color:var(--accent1);}
+.dp-wrap{margin-top:10px;display:none;animation:slideIn .25s ease;}
+.dp-wrap.show{display:block;}
+#datePicker{
+  border:2px solid var(--accent2);border-radius:12px;padding:8px 14px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:14px;outline:none;
+  background:white;color:var(--text);width:100%;max-width:220px;
+}
 
-.steps{display:flex;gap:6px;justify-content:center;margin:12px 0 16px;}
-.step-dot{width:28px;height:28px;border-radius:50%;border:2.5px solid #ddd;background:white;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all .25s;font-weight:700;}
+.steps{display:flex;gap:6px;justify-content:center;margin:16px 0 22px;}
+.step-dot{
+  width:32px;height:32px;border-radius:50%;border:2.5px solid #ddd;
+  background:white;display:flex;align-items:center;justify-content:center;
+  font-size:13px;cursor:pointer;transition:all .25s;font-weight:700;
+}
 .step-dot.active{border-color:var(--accent1);background:var(--accent1);color:white;transform:scale(1.15);}
 .step-dot.done{border-color:var(--accent4);background:var(--accent4);color:white;}
-.progress-bar{height:4px;background:#EEE;border-radius:2px;margin:0 0 16px;overflow:hidden;}
+.progress-bar{height:4px;background:#EEE;border-radius:2px;margin:0 0 20px;overflow:hidden;}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent1),var(--accent3));border-radius:2px;transition:width .4s ease;}
 
-.card{background:var(--card);border-radius:var(--radius);padding:18px 16px;margin-bottom:12px;box-shadow:0 4px 18px var(--shadow);display:none;animation:slideIn .35s ease;}
+.card{
+  background:var(--card);border-radius:var(--radius);padding:24px 20px;
+  margin-bottom:14px;box-shadow:0 4px 20px var(--shadow);display:none;animation:slideIn .35s ease;
+}
 .card.active{display:block;}
-.card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.card-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.card-title{font-size:14px;font-weight:700;}
-.card-sub{font-size:11px;color:var(--text-soft);margin-top:2px;}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.card-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.card-title{font-size:16px;font-weight:700;}
+.card-sub{font-size:12px;color:var(--text-soft);margin-top:2px;}
 .s1 .card-icon{background:#FFE8E0;}
 .s2 .card-icon{background:#E0F4F5;}
 .s3 .card-icon{background:#FFF6DC;}
 
-.praise-list{display:flex;flex-direction:column;gap:8px;}
-.praise-item{display:flex;align-items:center;gap:8px;}
-.praise-num{width:24px;height:24px;border-radius:50%;background:var(--accent3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
-.praise-input{flex:1;border:2px solid #EEE;border-radius:11px;padding:9px 12px;font-size:13px;outline:none;transition:border .2s;background:#FAFAFA;}
+.praise-list{display:flex;flex-direction:column;gap:10px;}
+.praise-item{display:flex;align-items:center;gap:10px;}
+.praise-num{width:28px;height:28px;border-radius:50%;background:var(--accent3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.praise-input{
+  flex:1;border:2px solid #EEE;border-radius:12px;padding:10px 14px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:14px;outline:none;
+  transition:border .2s;background:#FAFAFA;color:var(--text);
+}
 .praise-input:focus{border-color:var(--accent3);background:white;}
-.char-count{text-align:right;font-size:10px;color:var(--text-soft);margin-top:3px;}
+.char-count{text-align:right;font-size:11px;color:var(--text-soft);margin-top:4px;}
 
-.summary-card{background:white;border-radius:var(--radius);padding:18px;box-shadow:0 4px 18px var(--shadow);display:none;}
+.summary-card{background:white;border-radius:var(--radius);padding:24px;box-shadow:0 4px 20px var(--shadow);display:none;}
 .summary-card.show{display:block;animation:slideIn .35s ease;}
-.summary-title{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--accent1);}
-.summary-section{margin-bottom:11px;}
-.summary-label{font-size:10px;font-weight:700;color:var(--text-soft);margin-bottom:5px;}
-.summary-content{font-size:12px;line-height:1.65;background:#FAFAFA;border-radius:9px;padding:9px 12px;}
-.praise-badge{display:inline-flex;align-items:center;gap:4px;background:#FFF6DC;border-radius:20px;padding:3px 10px;font-size:12px;margin:2px;}
-.saved-banner{background:#E8F5E8;border:2px solid #A8D8A8;border-radius:12px;padding:9px 12px;font-size:12px;color:#2a5a2a;margin-bottom:10px;display:none;align-items:center;gap:7px;}
+.summary-title{font-size:18px;font-weight:700;margin-bottom:14px;color:var(--accent1);}
+.summary-section{margin-bottom:13px;}
+.summary-label{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--text-soft);margin-bottom:6px;}
+.summary-content{font-size:13px;line-height:1.7;background:#FAFAFA;border-radius:10px;padding:10px 14px;}
+.praise-badge{display:inline-flex;align-items:center;gap:5px;background:#FFF6DC;border-radius:20px;padding:4px 11px;font-size:13px;margin:3px;}
+.saved-banner{background:#E8F5E8;border:2px solid #A8D8A8;border-radius:14px;padding:10px 14px;font-size:13px;color:#2a5a2a;margin-bottom:12px;display:none;align-items:center;gap:8px;}
 .saved-banner.show{display:flex;}
 
-/* ── TASK ── */
-#pageTask header{text-align:center;padding:20px 0 14px;}
-#pageTask header .emoji{font-size:38px;display:block;margin-bottom:5px;animation:float 3s ease-in-out infinite;}
-#pageTask header h2{font-size:20px;font-weight:700;color:var(--accent1);}
-#pageTask header .sub{font-size:12px;color:var(--text-soft);margin-top:2px;}
+/* ── TASK PAGE ── */
+#pageTask header{text-align:center;padding:36px 0 20px;}
+#pageTask header .emoji{font-size:44px;display:block;margin-bottom:8px;animation:float 3.2s ease-in-out infinite;}
+#pageTask header h2{font-size:24px;font-weight:700;color:var(--accent1);}
+#pageTask header .sub{font-size:13px;color:var(--text-soft);margin-top:4px;}
 
-.tsection{background:white;border-radius:var(--radius);padding:16px;box-shadow:0 4px 18px var(--shadow);margin-bottom:14px;overflow:hidden;}
-.sec-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
-.sec-badge{background:var(--accent1);color:white;border-radius:20px;padding:2px 9px;font-size:10px;}
+.tsection{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 4px 20px var(--shadow);margin-bottom:16px;}
+.sec-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-badge{background:var(--accent1);color:white;border-radius:20px;padding:2px 10px;font-size:11px;}
 
-.task-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
-.task-item{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:12px;border:2px solid #EEE;background:#FAFAFA;transition:all .25s;}
+.task-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.task-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:2px solid #EEE;background:#FAFAFA;transition:all .2s;}
 .task-item.done{background:#F0FBF0;border-color:#A8D8A8;}
 .task-item.done .ttext{text-decoration:line-through;color:var(--text-soft);}
-.tchk{width:26px;height:26px;border-radius:50%;border:2.5px solid #DDD;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0;transition:all .2s;}
+.tchk{width:28px;height:28px;border-radius:50%;border:2.5px solid #DDD;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0;transition:all .2s;}
 .task-item.done .tchk{background:var(--accent4);border-color:var(--accent4);animation:pop .3s ease;}
-.ttext{flex:1;font-size:13px;line-height:1.35;}
-.tdel{background:none;border:none;cursor:pointer;font-size:14px;color:#DDD;padding:3px;transition:color .2s;}
+.ttext{flex:1;font-size:14px;line-height:1.4;}
+.tdel{background:none;border:none;cursor:pointer;font-size:15px;color:#DDD;padding:4px;transition:color .2s;}
 .tdel:hover{color:#E05050;}
 
-.add-row{display:flex;gap:7px;width:100%;min-width:0;}
-.add-input{flex:1;min-width:0;border:2px solid #EEE;border-radius:11px;padding:9px 10px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;outline:none;transition:border .2s;background:#FAFAFA;color:var(--text);}
+.add-row{display:flex;gap:8px;width:100%;min-width:0;}
+.add-input{
+  flex:1;min-width:0;border:2px solid #EEE;border-radius:12px;padding:11px 14px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:14px;outline:none;
+  transition:border .2s;background:#FAFAFA;color:var(--text);
+}
 .add-input:focus{border-color:var(--accent1);background:white;}
-.add-btn{background:var(--accent1);color:white;border:none;border-radius:11px;padding:9px 12px;font-size:16px;cursor:pointer;transition:all .2s;flex-shrink:0;width:40px;}
+.add-btn{
+  background:var(--accent1);color:white;border:none;border-radius:12px;
+  width:44px;font-size:20px;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.add-btn:hover{background:#ff7a55;}
 
-.tprog{margin-bottom:12px;}
-.tprog-top{display:flex;justify-content:space-between;font-size:11px;color:var(--text-soft);margin-bottom:5px;}
-.tprog-bar{height:7px;background:#EEE;border-radius:4px;overflow:hidden;}
+.tprog{margin-bottom:14px;}
+.tprog-top{display:flex;justify-content:space-between;font-size:12px;color:var(--text-soft);margin-bottom:6px;}
+.tprog-bar{height:8px;background:#EEE;border-radius:4px;overflow:hidden;}
 .tprog-fill{height:100%;background:linear-gradient(90deg,var(--accent4),var(--accent2));border-radius:4px;transition:width .5s ease;}
 
-.rollover{width:100%;padding:9px;border:2px dashed #DDD;background:none;border-radius:11px;font-family:'Zen Maru Gothic',sans-serif;font-size:12px;color:var(--text-soft);cursor:pointer;transition:all .2s;margin-top:4px;}
-.rollover:hover{border-color:var(--accent1);color:var(--accent1);}
+.rollover-btn{
+  width:100%;padding:10px;border:2px dashed #DDD;background:none;border-radius:12px;
+  font-family:'Zen Maru Gothic',sans-serif;font-size:13px;color:var(--text-soft);
+  cursor:pointer;transition:all .2s;margin-top:6px;
+}
+.rollover-btn:hover{border-color:var(--accent1);color:var(--accent1);}
 
-.habit-row-wrap{background:#FAFAFA;border-radius:12px;padding:10px 12px;border:2px solid #EEE;margin-bottom:8px;}
-.habit-row{display:flex;align-items:center;gap:9px;}
-.hname{flex:1;font-size:13px;}
-.hstreak{font-size:10px;color:var(--text-soft);margin-top:1px;}
-.hchk{width:34px;height:34px;border-radius:50%;border:2.5px solid #DDD;background:white;font-size:16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.habit-row-wrap{background:#FAFAFA;border-radius:14px;padding:12px 14px;border:2px solid #EEE;margin-bottom:10px;}
+.habit-row{display:flex;align-items:center;gap:10px;}
+.hname{flex:1;font-size:14px;}
+.hstreak{font-size:11px;color:var(--text-soft);margin-top:2px;}
+.hchk{
+  width:38px;height:38px;border-radius:50%;border:2.5px solid #DDD;background:white;
+  font-size:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
 .hchk.on{background:var(--accent3);border-color:var(--accent3);animation:pop .3s ease;}
-.hdel{background:none;border:none;cursor:pointer;font-size:13px;color:#DDD;padding:3px;transition:color .2s;}
+.hdel{background:none;border:none;cursor:pointer;font-size:15px;color:#DDD;padding:4px;transition:color .2s;}
 .hdel:hover{color:#E05050;}
-.week-dots{display:flex;gap:4px;margin-top:6px;}
-.wd{width:9px;height:9px;border-radius:50%;background:#EEE;}
+.week-dots{display:flex;gap:5px;margin-top:7px;}
+.wd{width:10px;height:10px;border-radius:50%;background:#EEE;}
 .wd.on{background:var(--accent3);}
 .wd.today{background:var(--accent1);}
 
-/* ── CALENDAR ── */
-#pageCalendar header{text-align:center;padding:20px 0 14px;}
-#pageCalendar header h2{font-size:20px;font-weight:700;color:var(--accent1);}
+/* ── CALENDAR PAGE ── */
+#pageCalendar header{text-align:center;padding:36px 0 20px;}
+#pageCalendar header h2{font-size:24px;font-weight:700;color:var(--accent1);}
 
-.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.cal-nav h3{font-size:16px;font-weight:700;color:var(--accent1);}
-.cnav{width:32px;height:32px;border-radius:50%;border:2px solid #EEE;background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.streak-box{background:linear-gradient(135deg,#FFE0D0,#FFF0E8);border-radius:16px;padding:14px 20px;display:none;align-items:center;gap:12px;margin-bottom:18px;border:2px solid #FFD0B8;}
+.streak-box.show{display:flex;}
+.sf{font-size:32px;}
+.snum{font-size:22px;font-weight:700;color:var(--accent1);}
+.stxt{font-size:13px;color:var(--text-soft);}
+
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.cal-nav h3{font-size:20px;font-weight:700;color:var(--accent1);}
+.cnav{width:36px;height:36px;border-radius:50%;border:2px solid #EEE;background:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
 .cnav:hover{border-color:var(--accent1);color:var(--accent1);}
 
-.cal-grid{background:white;border-radius:var(--radius);box-shadow:0 4px 18px var(--shadow);overflow:hidden;margin-bottom:12px;}
+.cal-grid{background:white;border-radius:var(--radius);box-shadow:0 4px 20px var(--shadow);overflow:hidden;margin-bottom:14px;}
 .cal-wd-row{display:grid;grid-template-columns:repeat(7,1fr);background:#FFF3EC;border-bottom:2px solid #F0E8E0;}
-.cal-wd{text-align:center;padding:8px 0;font-size:10px;font-weight:700;color:var(--text-soft);}
+.cal-wd{text-align:center;padding:10px 0;font-size:11px;font-weight:700;color:var(--text-soft);}
 .cal-wd:first-child{color:#E05050;}
 .cal-wd:last-child{color:#5080E0;}
 .cal-days{display:grid;grid-template-columns:repeat(7,1fr);}
-.cd{min-height:44px;padding:4px 2px;border-bottom:1px solid #F5F0EC;border-right:1px solid #F5F0EC;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .15s;}
+.cd{min-height:52px;padding:6px 4px;border-bottom:1px solid #F5F0EC;border-right:1px solid #F5F0EC;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .15s;}
 .cd.click{cursor:pointer;}
 .cd.click:hover{background:#FFF8F4;}
 .cd.om .cdn{color:#CCC;}
-.cd.today .cdn{background:var(--accent1);color:white;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.cd.today .cdn{background:var(--accent1);color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;}
 .cd.has{background:#FFF6F0;}
 .cd.sun .cdn{color:#E05050;}
 .cd.sat .cdn{color:#5080E0;}
 .cd.today.sun .cdn,.cd.today.sat .cdn{color:white;}
-.cdn{font-size:11px;font-weight:500;line-height:1;}
-.cdot{width:5px;height:5px;border-radius:50%;background:var(--accent1);}
-.hdot{width:5px;height:5px;border-radius:50%;background:var(--accent3);}
-.cal-legend{text-align:center;font-size:11px;color:var(--text-soft);line-height:1.8;margin-bottom:12px;}
+.cdn{font-size:13px;font-weight:500;line-height:1;}
+.cdot{width:6px;height:6px;border-radius:50%;background:var(--accent1);}
+.hdot{width:6px;height:6px;border-radius:50%;background:var(--accent3);}
+.cal-legend{text-align:center;font-size:12px;color:var(--text-soft);line-height:1.9;margin-bottom:14px;}
 
-.streak-box{background:linear-gradient(135deg,#FFE0D0,#FFF0E8);border-radius:14px;padding:12px 16px;display:none;align-items:center;gap:10px;margin-bottom:14px;border:2px solid #FFD0B8;}
-.streak-box.show{display:flex;}
-.sf{font-size:28px;}
-.snum{font-size:18px;font-weight:700;color:var(--accent1);}
-.stxt{font-size:12px;color:var(--text-soft);}
+.backup-box{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 4px 20px var(--shadow);margin-bottom:16px;}
+.backup-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.backup-desc{font-size:12px;color:var(--text-soft);margin-bottom:14px;line-height:1.6;}
+.backup-btns{display:flex;gap:10px;}
+.btn-export{background:#FFF6DC;color:#7a5800;flex:1;padding:12px;}
+.btn-export:hover{background:#ffe89a;}
+.btn-import{background:#E0F4F5;color:#1a5c60;flex:1;padding:12px;cursor:pointer;}
+.btn-import:hover{background:#b8e8ea;}
 
-/* Modal */
-.overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:flex-end;justify-content:center;}
 .overlay.show{display:flex;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal{background:white;border-radius:20px 20px 0 0;width:100%;max-height:75%;overflow-y:auto;padding:18px 16px 40px;animation:slideUp .3s ease;}
+.modal{
+  background:white;border-radius:24px 24px 0 0;
+  width:100%;max-width:560px;max-height:82vh;overflow-y:auto;
+  padding:24px 20px 48px;animation:slideUp .3s ease;
+}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.mhandle{width:36px;height:4px;background:#DDD;border-radius:2px;margin:0 auto 14px;}
-.mdate{font-size:14px;font-weight:700;color:var(--accent1);margin-bottom:12px;}
-.msec{margin-bottom:12px;}
-.mlabel{font-size:10px;font-weight:700;color:var(--text-soft);letter-spacing:.08em;margin-bottom:6px;}
-.mtext{font-size:13px;line-height:1.7;background:#FAFAFA;border-radius:10px;padding:10px 12px;white-space:pre-wrap;}
-.mclose{width:100%;padding:11px;border:none;background:#F0F0F0;border-radius:50px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:7px;}
-.medit{width:100%;padding:11px;border:none;background:#FFF3EC;border-radius:50px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:7px;color:var(--accent1);}
+.mhandle{width:40px;height:4px;background:#DDD;border-radius:2px;margin:0 auto 18px;}
+.mdate{font-size:16px;font-weight:700;color:var(--accent1);margin-bottom:14px;}
+.msec{margin-bottom:14px;}
+.mlabel{font-size:11px;font-weight:700;color:var(--text-soft);letter-spacing:.08em;margin-bottom:7px;}
+.mtext{font-size:14px;line-height:1.75;background:#FAFAFA;border-radius:12px;padding:12px 14px;white-space:pre-wrap;}
+.mclose{width:100%;padding:12px;border:none;background:#F0F0F0;border-radius:50px;font-family:'Zen Maru Gothic',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s;}
+.mclose:hover{background:#E5E5E5;}
+.medit{width:100%;padding:12px;border:none;background:#FFF3EC;border-radius:50px;font-family:'Zen Maru Gothic',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;color:var(--accent1);transition:background .2s;}
+.medit:hover{background:#FFE8DC;}
 
-/* Toast */
-.toast{position:absolute;bottom:78px;left:50%;transform:translateX(-50%) translateY(16px);background:#3D2B1F;color:white;padding:10px 20px;border-radius:50px;font-size:12px;font-weight:700;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;}
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:#3D2B1F;color:white;padding:12px 24px;border-radius:50px;
+  font-size:14px;font-weight:700;opacity:0;transition:all .3s;z-index:400;white-space:nowrap;
+}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
-<div class="phone">
-  <div class="phone-notch"></div>
-  <div class="phone-screen">
 
-    <!-- ═══ JOURNAL ═══ -->
-    <div id="pageJournal" class="page active">
-      <header>
-        <span class="emoji">🧠</span>
-        <h1>あたまのなか日記</h1>
-        <div class="date-row">
-          <div class="date" id="dateStr"></div>
-          <button class="btn-chdate" onclick="toggleDP()">📅 日付変更</button>
-        </div>
-        <div id="dpWrap" style="display:none;margin-top:8px;">
-          <input type="date" id="datePicker" onchange="changeDate(this.value)"
-            style="border:2px solid var(--accent2);border-radius:11px;padding:7px 12px;font-family:inherit;font-size:13px;outline:none;background:white;color:var(--text);width:100%;max-width:200px;">
-        </div>
-      </header>
-
-      <div class="progress-bar"><div class="progress-fill" id="pFill" style="width:33%"></div></div>
-      <div class="steps">
-        <div class="step-dot active" id="d1" onclick="goStep(1)">1</div>
-        <div class="step-dot" id="d2" onclick="goStep(2)">2</div>
-        <div class="step-dot" id="d3" onclick="goStep(3)">3</div>
+<!-- ═══ JOURNAL ═══ -->
+<div id="pageJournal" class="page active">
+  <div class="wrap">
+    <header>
+      <span class="emoji">🧠</span>
+      <h1>あたまのなか日記</h1>
+      <div class="date-row">
+        <div class="date" id="dateStr"></div>
+        <button class="btn-chdate" onclick="toggleDP()">📅 日付を変える</button>
       </div>
-
-      <div class="card s1 active" id="c1">
-        <div class="card-header"><div class="card-icon">🌀</div><div><div class="card-title">あたまを空っぽにする</div><div class="card-sub">思ったこと、なんでもOK</div></div></div>
-        <textarea id="brain" rows="5" placeholder="今あたまの中にあること、ぜんぶここに出しちゃおう。&#10;&#10;気になってること、モヤモヤ、なんでも ✨"></textarea>
-        <div class="char-count"><span id="bCount">0</span> 文字</div>
-        <div class="btn-row"><span></span><button class="btn btn-primary" onclick="goStep(2)">つぎへ →</button></div>
+      <div class="dp-wrap" id="dpWrap">
+        <input type="date" id="datePicker" onchange="changeDate(this.value)">
       </div>
+    </header>
 
-      <div class="card s2" id="c2">
-        <div class="card-header"><div class="card-icon">⭐</div><div><div class="card-title">今日の自分をほめる</div><div class="card-sub">どんな小さなことでも3つ！</div></div></div>
-        <div class="praise-list">
-          <div class="praise-item"><div class="praise-num">1</div><input class="praise-input" id="p1" type="text" placeholder="例：朝ごはん食べた"></div>
-          <div class="praise-item"><div class="praise-num">2</div><input class="praise-input" id="p2" type="text" placeholder="例：返信を1件した"></div>
-          <div class="praise-item"><div class="praise-num">3</div><input class="praise-input" id="p3" type="text" placeholder="例：今日日記を開いた"></div>
-        </div>
-        <div class="btn-row"><button class="btn btn-ghost" onclick="goStep(1)">← もどる</button><button class="btn btn-primary" onclick="goStep(3)">つぎへ →</button></div>
-      </div>
-
-      <div class="card s3" id="c3">
-        <div class="card-header"><div class="card-icon">🌱</div><div><div class="card-title">今日をもう少し良くするには？</div><div class="card-sub">小さくていい、1つだけ</div></div></div>
-        <textarea id="improve" rows="3" placeholder="例：水を1杯飲む、深呼吸を3回…&#10;ちいさくていいよ 🌿"></textarea>
-        <div class="char-count"><span id="iCount">0</span> 文字</div>
-        <div class="btn-row"><button class="btn btn-ghost" onclick="goStep(2)">← もどる</button><button class="btn btn-primary" onclick="showSum()">📋 まとめる</button></div>
-      </div>
-
-      <div class="summary-card" id="sumCard">
-        <div class="summary-title">📖 今日の日記まとめ</div>
-        <div class="saved-banner" id="savedBanner"><span>✅</span><span>今日の日記は保存済みです。上書きできます。</span></div>
-        <div id="sumContent"></div>
-        <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px">
-          <button class="btn btn-copy" onclick="copySum()">📋 まとめをコピー</button>
-          <button class="btn btn-save" onclick="saveJournal()">💾 保存する</button>
-          <button class="btn btn-primary w100" onclick="resetJournal()">🌅 新しい日記を書く</button>
-        </div>
-      </div>
+    <div class="progress-bar"><div class="progress-fill" id="pFill" style="width:33%"></div></div>
+    <div class="steps">
+      <div class="step-dot active" id="d1" onclick="goStep(1)">1</div>
+      <div class="step-dot" id="d2" onclick="goStep(2)">2</div>
+      <div class="step-dot" id="d3" onclick="goStep(3)">3</div>
     </div>
 
-    <!-- ═══ TASK ═══ -->
-    <div id="pageTask" class="page">
-      <header>
-        <span class="emoji">✅</span>
-        <h2>タスク &amp; 習慣</h2>
-        <div class="sub" id="taskDateStr"></div>
-      </header>
-
-      <div class="tsection">
-        <div class="sec-title">🎯 今日のタスク（最大3つ）<span class="sec-badge" id="tbadge">0/0</span></div>
-        <div class="tprog">
-          <div class="tprog-top"><span id="tpLabel">タスクを追加しよう</span><span id="tpPct">0%</span></div>
-          <div class="tprog-bar"><div class="tprog-fill" id="tpFill" style="width:0%"></div></div>
-        </div>
-        <div class="task-list" id="taskList"></div>
-        <div class="add-row" id="taskAddRow">
-          <input class="add-input" id="taskInput" type="text" placeholder="タスクを追加…" onkeydown="if(event.key==='Enter')addTask()">
-          <button class="add-btn" onclick="addTask()">＋</button>
-        </div>
-        <button class="rollover" id="rollBtn" style="display:none" onclick="rollover()">📥 昨日のタスクを繰り越す</button>
-      </div>
-
-      <div class="tsection">
-        <div class="sec-title">🌿 習慣トラッカー</div>
-        <div id="habitList"></div>
-        <div class="add-row">
-          <input class="add-input" id="habitInput" type="text" placeholder="習慣を追加… 例：水を飲む" onkeydown="if(event.key==='Enter')addHabit()">
-          <button class="add-btn" onclick="addHabit()">＋</button>
-        </div>
-      </div>
+    <div class="card s1 active" id="c1">
+      <div class="card-header"><div class="card-icon">🌀</div><div><div class="card-title">あたまを空っぽにする</div><div class="card-sub">思ったこと、気になること、なんでもOK</div></div></div>
+      <textarea id="brain" rows="7" placeholder="今あたまの中にあること、ぜんぶここに出しちゃおう。&#10;&#10;気になってること、モヤモヤ、なんでも。書いたら少し楽になるよ ✨"></textarea>
+      <div class="char-count"><span id="bCount">0</span> 文字</div>
+      <div class="btn-row"><span></span><button class="btn btn-primary" onclick="goStep(2)">つぎへ →</button></div>
     </div>
 
-    <!-- ═══ CALENDAR ═══ -->
-    <div id="pageCalendar" class="page">
-      <header><h2>📅 カレンダー</h2></header>
-
-      <div class="streak-box" id="streakBox">
-        <div class="sf">🔥</div>
-        <div><div class="snum" id="snum">0日</div><div class="stxt">連続記録中！すごい✨</div></div>
+    <div class="card s2" id="c2">
+      <div class="card-header"><div class="card-icon">⭐</div><div><div class="card-title">今日の自分をほめる</div><div class="card-sub">どんな小さなことでも3つ！</div></div></div>
+      <div class="praise-list">
+        <div class="praise-item"><div class="praise-num">1</div><input class="praise-input" id="p1" type="text" placeholder="例：朝ごはん食べた"></div>
+        <div class="praise-item"><div class="praise-num">2</div><input class="praise-input" id="p2" type="text" placeholder="例：返信を1件した"></div>
+        <div class="praise-item"><div class="praise-num">3</div><input class="praise-input" id="p3" type="text" placeholder="例：今日日記を開いた"></div>
       </div>
-
-      <div class="cal-nav">
-        <button class="cnav" onclick="chMonth(-1)">‹</button>
-        <h3 id="calTitle"></h3>
-        <button class="cnav" onclick="chMonth(1)">›</button>
-      </div>
-      <div class="cal-grid">
-        <div class="cal-wd-row">
-          <div class="cal-wd">日</div><div class="cal-wd">月</div><div class="cal-wd">火</div>
-          <div class="cal-wd">水</div><div class="cal-wd">木</div><div class="cal-wd">金</div><div class="cal-wd">土</div>
-        </div>
-        <div class="cal-days" id="calDays"></div>
-      </div>
-      <div class="cal-legend">🟠 日記あり　🟡 習慣あり<br>記録のある日をタップで読める</div>
+      <div class="btn-row"><button class="btn btn-ghost" onclick="goStep(1)">← もどる</button><button class="btn btn-primary" onclick="goStep(3)">つぎへ →</button></div>
     </div>
 
-    <!-- Modal -->
-    <div class="overlay" id="overlay" onclick="closeOverlay(event)">
-      <div class="modal">
-        <div class="mhandle"></div>
-        <div class="mdate" id="mdate"></div>
-        <div id="mcontent"></div>
-        <button class="medit" onclick="editFromModal()">✏️ この日の日記を編集</button>
-        <button class="mclose" onclick="closeModal()">閉じる</button>
-      </div>
+    <div class="card s3" id="c3">
+      <div class="card-header"><div class="card-icon">🌱</div><div><div class="card-title">今日をもう少し良くするには？</div><div class="card-sub">小さくていい、1つだけ</div></div></div>
+      <textarea id="improve" rows="4" placeholder="例：水を1杯飲む、5分だけ片付けをする…&#10;ちいさくていいよ 🌿"></textarea>
+      <div class="char-count"><span id="iCount">0</span> 文字</div>
+      <div class="btn-row"><button class="btn btn-ghost" onclick="goStep(2)">← もどる</button><button class="btn btn-primary" onclick="showSum()">📋 まとめを見る</button></div>
     </div>
 
-    <!-- Bottom Nav -->
-    <nav class="bottom-nav">
-      <button class="nav-btn active" id="nJ" onclick="showPage('journal')"><span class="ni">✏️</span><span>日記</span></button>
-      <button class="nav-btn" id="nT" onclick="showPage('task')"><span class="ni">✅</span><span>タスク</span></button>
-      <button class="nav-btn" id="nC" onclick="showPage('calendar')"><span class="ni">📅</span><span>カレンダー</span></button>
-    </nav>
+    <div class="summary-card" id="sumCard">
+      <div class="summary-title">📖 今日の日記まとめ</div>
+      <div class="saved-banner" id="savedBanner"><span>✅</span><span>今日の日記はもう保存されています。上書き保存できます。</span></div>
+      <div id="sumContent"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+        <button class="btn btn-copy" onclick="copySum()">📋 まとめをコピーする</button>
+        <button class="btn btn-save" onclick="saveJournal()">💾 保存する</button>
+        <button class="btn btn-primary w100" onclick="resetJournal()">🌅 新しい日記を書く</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <div class="toast" id="toast"></div>
-  </div><!-- phone-screen -->
-</div><!-- phone -->
+<!-- ═══ TASK ═══ -->
+<div id="pageTask" class="page">
+  <div class="wrap">
+    <header>
+      <span class="emoji">✅</span>
+      <h2>タスク &amp; 習慣</h2>
+      <div class="sub" id="taskDateStr"></div>
+    </header>
+
+    <div class="tsection">
+      <div class="sec-title">🎯 今日のタスク（最大3つ）<span class="sec-badge" id="tbadge">0/0</span></div>
+      <div class="tprog">
+        <div class="tprog-top"><span id="tpLabel">タスクを追加しよう</span><span id="tpPct">0%</span></div>
+        <div class="tprog-bar"><div class="tprog-fill" id="tpFill" style="width:0%"></div></div>
+      </div>
+      <div class="task-list" id="taskList"></div>
+      <div class="add-row" id="taskAddRow">
+        <input class="add-input" id="taskInput" type="text" placeholder="タスクを追加…" onkeydown="if(event.key==='Enter')addTask()">
+        <button class="add-btn" onclick="addTask()">＋</button>
+      </div>
+      <button class="rollover-btn" id="rollBtn" style="display:none" onclick="rollover()">📥 昨日のタスクを繰り越す</button>
+    </div>
+
+    <div class="tsection">
+      <div class="sec-title">🌿 習慣トラッカー</div>
+      <div id="habitList"></div>
+      <div class="add-row">
+        <input class="add-input" id="habitInput" type="text" placeholder="習慣を追加… 例：水を飲む" onkeydown="if(event.key==='Enter')addHabit()">
+        <button class="add-btn" onclick="addHabit()">＋</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CALENDAR ═══ -->
+<div id="pageCalendar" class="page">
+  <div class="wrap">
+    <header><h2>📅 カレンダー</h2></header>
+
+    <div class="streak-box" id="streakBox">
+      <div class="sf">🔥</div>
+      <div><div class="snum" id="snum">0日</div><div class="stxt">連続記録中！すごい✨</div></div>
+    </div>
+
+    <div class="cal-nav">
+      <button class="cnav" onclick="chMonth(-1)">‹</button>
+      <h3 id="calTitle"></h3>
+      <button class="cnav" onclick="chMonth(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-wd-row">
+        <div class="cal-wd">日</div><div class="cal-wd">月</div><div class="cal-wd">火</div>
+        <div class="cal-wd">水</div><div class="cal-wd">木</div><div class="cal-wd">金</div><div class="cal-wd">土</div>
+      </div>
+      <div class="cal-days" id="calDays"></div>
+    </div>
+    <div class="cal-legend">🟠 日記あり　🟡 習慣あり<br>記録のある日をタップで読める</div>
+
+    <div class="backup-box">
+      <div class="backup-title">📦 データのバックアップ</div>
+      <div class="backup-desc">機種変更や誤削除に備えて、定期的に保存しておこう</div>
+      <div class="backup-btns">
+        <button class="btn btn-export" onclick="exportData()">⬇️ エクスポート</button>
+        <label class="btn btn-import" for="importFile">⬆️ インポート</label>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mdate" id="mdate"></div>
+    <div id="mcontent"></div>
+    <button class="medit" onclick="editFromModal()">✏️ この日の日記を編集する</button>
+    <button class="mclose" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nJournal" onclick="showPage('journal')"><span class="ni">✏️</span><span>日記を書く</span></button>
+  <button class="nav-btn" id="nTask" onclick="showPage('task')"><span class="ni">✅</span><span>タスク</span></button>
+  <button class="nav-btn" id="nCalendar" onclick="showPage('calendar')"><span class="ni">📅</span><span>カレンダー</span></button>
+</nav>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ── Storage (in-memory for demo) ──
-let ENTRIES={}, TASKS={}, HABITS=[], HCHECKS={};
+// ── Storage ──
+const JK='adhd-journal-v1', TK='adhd-tasks-v1', HK='adhd-habits-v1', HCK='adhd-hchecks-v1';
+const load=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch{return null;}};
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const loadE=()=>load(JK)||{};
+const loadT=()=>load(TK)||{};
+const loadH=()=>load(HK)||[];
+const loadHC=()=>load(HCK)||{};
 
-// Seed some demo data
-const today=new Date(), dk=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const past=(n)=>{const d=new Date(today);d.setDate(d.getDate()-n);return d;};
-ENTRIES[dk(past(1))]={brain:'昨日はちょっとしんどかったけど、なんとかやった。',praises:['ご飯作れた','散歩した','日記書いた'],improve:'早めに寝る'};
-ENTRIES[dk(past(2))]={brain:'集中できなくてモヤモヤしてた。',praises:['水飲んだ','タスク1個終わった','外に出た'],improve:'5分だけ片付け'};
-ENTRIES[dk(past(4))]={brain:'調子よかった！いろいろできた気がする。',praises:['朝ごはん食べた','返信できた','日記書いた'],improve:'ストレッチする'};
-TASKS[dk(past(1))]=[{text:'メール返信',done:true},{text:'買い物',done:false}];
-HABITS=['水を飲む','深呼吸3回','日記を書く'];
-HCHECKS[dk(past(1))]={0:true,2:true};
-HCHECKS[dk(past(2))]={0:true,1:true,2:true};
-HCHECKS[dk(past(4))]={0:true};
+const dk=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const today=new Date();
 
 // ── State ──
 let selDate=new Date(), curStep=1, openKey=null;
 let calY=today.getFullYear(), calM=today.getMonth();
 
-const fmtDate=(d)=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
-const toVal=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fmt=d=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
+const toVal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
 // init
-document.getElementById('dateStr').textContent=fmtDate(selDate);
-document.getElementById('taskDateStr').textContent=fmtDate(selDate);
+document.getElementById('dateStr').textContent=fmt(selDate);
+document.getElementById('taskDateStr').textContent=fmt(selDate);
 document.getElementById('datePicker').value=toVal(selDate);
 loadJournalForDate(dk(selDate));
 
 // ── Page nav ──
 function showPage(name){
   ['journal','task','calendar'].forEach(p=>{
-    const pid='page'+p.charAt(0).toUpperCase()+p.slice(1);
-    const nid='n'+p.charAt(0).toUpperCase();
-    document.getElementById(pid).classList.toggle('active',p===name);
-    document.getElementById(nid).classList.toggle('active',p===name);
+    document.getElementById('page'+p.charAt(0).toUpperCase()+p.slice(1)).classList.toggle('active',p===name);
+    document.getElementById('n'+p.charAt(0).toUpperCase()+p.slice(1)).classList.toggle('active',p===name);
   });
   if(name==='calendar')renderCal();
   if(name==='task'){renderTasks();renderHabits();}
-  document.querySelector('.phone-screen').scrollTop=0;
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ── Date ──
-function toggleDP(){document.getElementById('dpWrap').style.display=document.getElementById('dpWrap').style.display==='none'?'block':'none';}
+function toggleDP(){document.getElementById('dpWrap').classList.toggle('show');}
 function changeDate(v){
   if(!v)return;
   const[y,m,d]=v.split('-').map(Number);
   selDate=new Date(y,m-1,d);
-  document.getElementById('dateStr').textContent=fmtDate(selDate);
-  document.getElementById('taskDateStr').textContent=fmtDate(selDate);
-  document.getElementById('dpWrap').style.display='none';
+  document.getElementById('dateStr').textContent=fmt(selDate);
+  document.getElementById('taskDateStr').textContent=fmt(selDate);
+  document.getElementById('dpWrap').classList.remove('show');
   loadJournalForDate(v);renderTasks();
   toast(`📅 ${y}年${m}月${d}日に切り替えました`);
 }
 
 // ── Journal ──
 function loadJournalForDate(key){
-  const e=ENTRIES[key];
+  const e=loadE()[key];
   document.getElementById('brain').value=e?.brain||'';
   document.getElementById('p1').value=e?.praises?.[0]||'';
   document.getElementById('p2').value=e?.praises?.[1]||'';
@@ -430,13 +495,11 @@ function loadJournalForDate(key){
   document.getElementById('sumCard').classList.remove('show');
   ['d1','d2','d3'].forEach(id=>{document.getElementById(id).className='step-dot';});
   curStep=1;
+  ['c1','c2','c3'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('c1').classList.add('active');
-  document.getElementById('c2').classList.remove('active');
-  document.getElementById('c3').classList.remove('active');
   document.getElementById('d1').classList.add('active');
   document.getElementById('pFill').style.width='33%';
 }
-
 document.getElementById('brain').addEventListener('input',function(){document.getElementById('bCount').textContent=this.value.length;});
 document.getElementById('improve').addEventListener('input',function(){document.getElementById('iCount').textContent=this.value.length;});
 
@@ -450,11 +513,13 @@ function goStep(n){
   document.getElementById(`d${n}`).classList.remove('done');
   document.getElementById('pFill').style.width=[33,66,100][n-1]+'%';
   document.getElementById('sumCard').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function showSum(){
-  document.getElementById('sumCard').classList.add('show');
-  document.getElementById('savedBanner').classList.toggle('show',!!ENTRIES[dk(selDate)]);
+  const sc=document.getElementById('sumCard');
+  sc.classList.add('show');
+  document.getElementById('savedBanner').classList.toggle('show',!!loadE()[dk(selDate)]);
   const brain=document.getElementById('brain').value,
         p1=document.getElementById('p1').value,p2=document.getElementById('p2').value,p3=document.getElementById('p3').value,
         imp=document.getElementById('improve').value;
@@ -464,46 +529,51 @@ function showSum(){
   if(ps.length)html+=`<div class="summary-section"><div class="summary-label">⭐ 自分へのほめ言葉</div><div>${ps.map(p=>`<span class="praise-badge">✨ ${esc(p)}</span>`).join('')}</div></div>`;
   if(imp)html+=`<div class="summary-section"><div class="summary-label">🌱 今日をより良くするために</div><div class="summary-content">${esc(imp)}</div></div>`;
   document.getElementById('sumContent').innerHTML=html;
-  document.getElementById('sumCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  sc.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function saveJournal(){
-  const key=dk(selDate);
-  ENTRIES[key]={brain:document.getElementById('brain').value,praises:[document.getElementById('p1').value,document.getElementById('p2').value,document.getElementById('p3').value].filter(Boolean),improve:document.getElementById('improve').value};
+  const key=dk(selDate), entries=loadE();
+  entries[key]={
+    brain:document.getElementById('brain').value,
+    praises:[document.getElementById('p1').value,document.getElementById('p2').value,document.getElementById('p3').value].filter(Boolean),
+    improve:document.getElementById('improve').value,
+    savedAt:new Date().toISOString()
+  };
+  save(JK,entries);
   document.getElementById('savedBanner').classList.add('show');
   toast('💾 保存しました！');
 }
 
 function copySum(){
-  const brain=document.getElementById('brain').value,p1=document.getElementById('p1').value,p2=document.getElementById('p2').value,p3=document.getElementById('p3').value,imp=document.getElementById('improve').value;
-  let t=`📖 あたまのなか日記 ${fmtDate(selDate)}\n\n`;
+  const brain=document.getElementById('brain').value,p1=document.getElementById('p1').value,
+        p2=document.getElementById('p2').value,p3=document.getElementById('p3').value,
+        imp=document.getElementById('improve').value;
+  let t=`📖 あたまのなか日記 ${fmt(selDate)}\n\n`;
   if(brain)t+=`🌀 あたまの中にあったこと\n${brain}\n\n`;
   const ps=[p1,p2,p3].filter(Boolean);
   if(ps.length)t+=`⭐ 自分へのほめ言葉\n${ps.map((p,i)=>`${i+1}. ${p}`).join('\n')}\n\n`;
   if(imp)t+=`🌱 今日をより良くするために\n${imp}`;
-  navigator.clipboard?.writeText(t.trim()).then(()=>toast('📋 コピーしました！')).catch(()=>toast('📋 コピー完了！'));
-  toast('📋 コピーしました！');
+  navigator.clipboard.writeText(t.trim()).then(()=>toast('📋 コピーしました！')).catch(()=>toast('📋 コピー完了！'));
 }
 
 function resetJournal(){loadJournalForDate(dk(selDate));}
 
 // ── Tasks ──
-function getTasks(k){return TASKS[k]||[];}
-function setTasks(k,v){TASKS[k]=v;}
+function getTasks(k){return loadT()[k]||[];}
+function setTasks(k,v){const t=loadT();t[k]=v;save(TK,t);}
+function past(n){const d=new Date(selDate);d.setDate(d.getDate()-n);return d;}
 
 function renderTasks(){
   const key=dk(selDate),tasks=getTasks(key);
-  const list=document.getElementById('taskList');
-  list.innerHTML='';
-  const done=tasks.filter(t=>t.done).length,total=tasks.length;
-  const pct=total?Math.round(done/total*100):0;
+  const list=document.getElementById('taskList');list.innerHTML='';
+  const done=tasks.filter(t=>t.done).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
   document.getElementById('tbadge').textContent=`${done}/${total}`;
   document.getElementById('tpFill').style.width=pct+'%';
   document.getElementById('tpPct').textContent=pct+'%';
   document.getElementById('tpLabel').textContent=total===0?'タスクを追加しよう':done===total&&total>0?'🎉 全部できた！':`${done}個完了、あと${total-done}個`;
   document.getElementById('taskAddRow').style.display=tasks.length>=3?'none':'flex';
-  const ykey=dk(past2(1));
-  const yrem=getTasks(ykey).filter(t=>!t.done);
+  const yrem=getTasks(dk(past(1))).filter(t=>!t.done);
   document.getElementById('rollBtn').style.display=(yrem.length>0&&tasks.length<3)?'block':'none';
   tasks.forEach((t,i)=>{
     const el=document.createElement('div');
@@ -512,37 +582,31 @@ function renderTasks(){
     list.appendChild(el);
   });
 }
-function past2(n){const d=new Date(selDate);d.setDate(d.getDate()-n);return d;}
-
 function addTask(){
-  const inp=document.getElementById('taskInput'),text=inp.value.trim();
-  if(!text)return;
+  const inp=document.getElementById('taskInput'),text=inp.value.trim();if(!text)return;
   const key=dk(selDate),tasks=getTasks(key);
   if(tasks.length>=3){toast('タスクは3つまでだよ！');return;}
-  tasks.push({text,done:false});setTasks(key,tasks);inp.value='';renderTasks();
+  tasks.push({text,done:false,createdAt:new Date().toISOString()});setTasks(key,tasks);inp.value='';renderTasks();
 }
 function toggleTask(k,i){const t=getTasks(k);t[i].done=!t[i].done;setTasks(k,t);renderTasks();if(t[i].done)toast('✅ やったね！');}
 function delTask(k,i){const t=getTasks(k);t.splice(i,1);setTasks(k,t);renderTasks();}
 function rollover(){
-  const key=dk(selDate),ykey=dk(past2(1));
-  const yrem=getTasks(ykey).filter(t=>!t.done);
-  const tasks=getTasks(key);
+  const key=dk(selDate),yrem=getTasks(dk(past(1))).filter(t=>!t.done),tasks=getTasks(key);
   const add=yrem.slice(0,3-tasks.length);
-  add.forEach(t=>tasks.push({text:t.text,done:false}));
+  add.forEach(t=>tasks.push({text:t.text,done:false,createdAt:new Date().toISOString()}));
   setTasks(key,tasks);renderTasks();toast(`📥 ${add.length}件を繰り越しました`);
 }
 
 // ── Habits ──
 function renderHabits(){
-  const key=dk(selDate),list=document.getElementById('habitList');
-  list.innerHTML='';
-  if(HABITS.length===0){list.innerHTML='<div style="text-align:center;color:var(--text-soft);font-size:12px;padding:6px 0">習慣を追加してみよう🌿</div>';return;}
-  HABITS.forEach((h,i)=>{
-    const on=!!(HCHECKS[key]&&HCHECKS[key][i]);
-    let streak=0;
-    for(let d=0;d<365;d++){const k2=dk(past2(d));if(HCHECKS[k2]&&HCHECKS[k2][i])streak++;else break;}
+  const key=dk(selDate),habits=loadH(),checks=loadHC();
+  const list=document.getElementById('habitList');list.innerHTML='';
+  if(habits.length===0){list.innerHTML='<div style="text-align:center;color:var(--text-soft);font-size:13px;padding:8px 0">習慣を追加してみよう🌿</div>';return;}
+  habits.forEach((h,i)=>{
+    const on=!!(checks[key]&&checks[key][i]);
+    let streak=0;for(let d=0;d<365;d++){const k2=dk(past(d));if(checks[k2]&&checks[k2][i])streak++;else break;}
     const dots=Array.from({length:7},(_,d)=>{
-      const k2=dk(past2(6-d));const isDone=!!(HCHECKS[k2]&&HCHECKS[k2][i]);const isT=d===6;
+      const k2=dk(past(6-d)),isDone=!!(checks[k2]&&checks[k2][i]),isT=d===6;
       return `<div class="wd${isDone?' on':''}${isT?' today':''}"></div>`;
     }).join('');
     const el=document.createElement('div');el.className='habit-row-wrap';
@@ -550,33 +614,48 @@ function renderHabits(){
     list.appendChild(el);
   });
 }
-function addHabit(){const inp=document.getElementById('habitInput'),t=inp.value.trim();if(!t)return;HABITS.push(t);inp.value='';renderHabits();}
-function toggleHabit(i){const k=dk(selDate);if(!HCHECKS[k])HCHECKS[k]={};HCHECKS[k][i]=!HCHECKS[k][i];renderHabits();if(HCHECKS[k][i])toast('⭐ 習慣達成！');}
-function delHabit(i){HABITS.splice(i,1);Object.keys(HCHECKS).forEach(k=>{const nc={};Object.keys(HCHECKS[k]).forEach(j=>{const n=parseInt(j);if(n<i)nc[n]=HCHECKS[k][j];else if(n>i)nc[n-1]=HCHECKS[k][j];});HCHECKS[k]=nc;});renderHabits();}
+function addHabit(){
+  const inp=document.getElementById('habitInput'),text=inp.value.trim();if(!text)return;
+  const h=loadH();h.push(text);save(HK,h);inp.value='';renderHabits();
+}
+function toggleHabit(i){
+  const key=dk(selDate),checks=loadHC();
+  if(!checks[key])checks[key]={};checks[key][i]=!checks[key][i];save(HCK,checks);
+  renderHabits();if(checks[key][i])toast('⭐ 習慣達成！');
+}
+function delHabit(i){
+  const h=loadH();h.splice(i,1);save(HK,h);
+  const checks=loadHC();
+  Object.keys(checks).forEach(k=>{
+    const nc={};Object.keys(checks[k]).forEach(j=>{const n=parseInt(j);if(n<i)nc[n]=checks[k][j];else if(n>i)nc[n-1]=checks[k][j];});
+    checks[k]=nc;
+  });
+  save(HCK,checks);renderHabits();
+}
 
 // ── Calendar ──
 function renderCal(){
   document.getElementById('calTitle').textContent=`${calY}年${calM+1}月`;
-  let streak=0;{let d=new Date(selDate);while(ENTRIES[dk(d)]){streak++;d.setDate(d.getDate()-1);}}
+  const entries=loadE(),checks=loadHC();
+  let streak=0;{let d=new Date(selDate);while(entries[dk(d)]){streak++;d.setDate(d.getDate()-1);}}
   const sb=document.getElementById('streakBox');
   if(streak>=2){sb.classList.add('show');document.getElementById('snum').textContent=`${streak}日`;}else sb.classList.remove('show');
   const first=new Date(calY,calM,1),last=new Date(calY,calM+1,0),grid=document.getElementById('calDays');
-  grid.innerHTML='';
-  const todayKey=dk(today);
-  for(let i=0;i<first.getDay();i++)grid.appendChild(mkCell(new Date(calY,calM,-(first.getDay()-i-1)),todayKey,true));
-  for(let d=1;d<=last.getDate();d++)grid.appendChild(mkCell(new Date(calY,calM,d),todayKey,false));
+  grid.innerHTML='';const todayKey=dk(today);
+  for(let i=0;i<first.getDay();i++)grid.appendChild(mkCell(new Date(calY,calM,-(first.getDay()-i-1)),entries,checks,todayKey,true));
+  for(let d=1;d<=last.getDate();d++)grid.appendChild(mkCell(new Date(calY,calM,d),entries,checks,todayKey,false));
   const rem=(7-(first.getDay()+last.getDate())%7)%7;
-  for(let d=1;d<=rem;d++)grid.appendChild(mkCell(new Date(calY,calM+1,d),todayKey,true));
+  for(let d=1;d<=rem;d++)grid.appendChild(mkCell(new Date(calY,calM+1,d),entries,checks,todayKey,true));
 }
-function mkCell(date,todayKey,om){
-  const key=dk(date),hasE=!!ENTRIES[key],isT=key===todayKey,dow=date.getDay();
-  const hc=HCHECKS[key]&&Object.values(HCHECKS[key]).some(Boolean);
+function mkCell(date,entries,checks,todayKey,om){
+  const key=dk(date),hasE=!!entries[key],isT=key===todayKey,dow=date.getDay();
+  const hc=checks[key]&&Object.values(checks[key]).some(Boolean);
   const el=document.createElement('div');
   el.className=`cd${om?' om':''}${isT?' today':''}${hasE?' has click':''}${dow===0?' sun':dow===6?' sat':''}`;
   const num=document.createElement('div');num.className='cdn';num.textContent=date.getDate();el.appendChild(num);
   if(hasE){const d=document.createElement('div');d.className='cdot';el.appendChild(d);}
   if(hc){const d=document.createElement('div');d.className='hdot';el.appendChild(d);}
-  if(hasE)el.onclick=()=>openModal(key,ENTRIES[key]);
+  if(hasE)el.onclick=()=>openModal(key,entries[key]);
   return el;
 }
 function chMonth(d){calM+=d;if(calM>11){calM=0;calY++;}else if(calM<0){calM=11;calY--;}renderCal();}
@@ -599,16 +678,46 @@ function editFromModal(){
   if(!openKey)return;
   const[y,m,d]=openKey.split('-').map(Number);
   selDate=new Date(y,m-1,d);
-  document.getElementById('dateStr').textContent=fmtDate(selDate);
-  document.getElementById('taskDateStr').textContent=fmtDate(selDate);
+  document.getElementById('dateStr').textContent=fmt(selDate);
+  document.getElementById('taskDateStr').textContent=fmt(selDate);
   document.getElementById('datePicker').value=openKey;
   closeModal();loadJournalForDate(openKey);showPage('journal');
   toast(`📅 ${y}年${+m}月${+d}日を編集中`);
 }
 
+// ── Export / Import ──
+function exportData(){
+  const entries=loadE(),count=Object.keys(entries).length;
+  if(count===0){toast('📭 保存された日記がありません');return;}
+  const json=JSON.stringify({version:2,exportedAt:new Date().toISOString(),entries,tasks:loadT(),habits:loadH(),habitChecks:loadHC()},null,2);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.download=`atama-journal-${dk(today)}.json`;a.click();
+  toast(`✅ ${count}件をエクスポートしました`);
+}
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);if(!data.entries)throw new Error();
+      if(!confirm(`${Object.keys(data.entries).length}件の記録を読み込みます。追加しますか？`))return;
+      save(JK,{...loadE(),...data.entries});
+      if(data.tasks)save(TK,{...loadT(),...data.tasks});
+      if(data.habits)save(HK,data.habits);
+      if(data.habitChecks)save(HCK,{...loadHC(),...data.habitChecks});
+      toast('✅ インポートしました');renderCal();
+    }catch{toast('❌ ファイルが読み込めませんでした');}
+    event.target.value='';
+  };reader.readAsText(file);
+}
+
 // ── Utils ──
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// PWA
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
